@@ -55,10 +55,16 @@ if(BUILD_TESTS)
     )
 
     if(TEST_SOURCES)
-        add_executable(${PROJECT_NAME}_tests ${TEST_SOURCES})
+        # 测试程序复用主程序的所有源文件（包括 ws/http/rtsp 等模块实现），
+        # 但排除主程序入口 src/main.cpp 以避免 main 符号冲突。
+        set(TEST_SRC_SOURCES ${SOURCES})
+        list(FILTER TEST_SRC_SOURCES EXCLUDE REGEX ".*/main\\.cpp$")
+
+        add_executable(${PROJECT_NAME}_tests ${TEST_SOURCES} ${TEST_SRC_SOURCES})
 
         target_include_directories(${PROJECT_NAME}_tests PRIVATE
             ${CMAKE_SOURCE_DIR}/include
+            ${CMAKE_SOURCE_DIR}/include/ai-camera
             ${ASIO_INCLUDE_DIR}
         )
 
