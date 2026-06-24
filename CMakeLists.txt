@@ -33,6 +33,12 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include/ai-camera
     ${ASIO_INCLUDE_DIR}
+    ${CMAKE_SOURCE_DIR}/third_party/tinyxml2
+)
+
+# Add tinyxml2 source file (not in src/, so not picked up by GLOB_RECURSE)
+target_sources(${PROJECT_NAME} PRIVATE
+    ${CMAKE_SOURCE_DIR}/third_party/tinyxml2/tinyxml2.cpp
 )
 
 # Link pthreads (required by ASIO on Linux)
@@ -66,6 +72,11 @@ if(BUILD_TESTS)
             ${CMAKE_SOURCE_DIR}/include
             ${CMAKE_SOURCE_DIR}/include/ai-camera
             ${ASIO_INCLUDE_DIR}
+            ${CMAKE_SOURCE_DIR}/third_party/tinyxml2
+        )
+
+        target_sources(${PROJECT_NAME}_tests PRIVATE
+            ${CMAKE_SOURCE_DIR}/third_party/tinyxml2/tinyxml2.cpp
         )
 
         target_link_libraries(${PROJECT_NAME}_tests PRIVATE Threads::Threads)

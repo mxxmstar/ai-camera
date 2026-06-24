@@ -51,3 +51,5 @@ Thumbs.db
 # ============================================================
 third_party/*/build/
 third_party/*/out/
+
+.codebuddy/
