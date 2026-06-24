@@ -1,6 +1,7 @@
 #include "server/http/server.hpp"
 #include "rtsp/rtspmgr.h"
 #include "onvif/onvif_manager.h"
+#include "gb28181/gb28181_manager.h"
 
 #include <csignal>
 #include <iostream>
@@ -17,6 +18,7 @@ static void signal_handler(int /*signum*/)
         g_http_server->stop();
     rtsp::RtspManager::Instance().Stop();
     onvif::OnvifManager::Instance().Stop();
+    gb28181::Gb28181Manager::Instance().Stop();
 }
 
 static void print_usage(const char* prog)
@@ -137,6 +139,28 @@ int main(int argc, char* argv[])
     // ------------------------------------------------------------
     if (!onvif::OnvifManager::Instance().Start()) {
         std::cerr << "[Main] Warning: ONVIF start failed, continuing..." << std::endl;
+    }
+
+    // ------------------------------------------------------------
+    // 4.6 Start GB28181 module (SIP signaling)
+    // ------------------------------------------------------------
+    gb28181::Gb28181Config gb28181_cfg;
+    gb28181_cfg.device_id = "34020000001320000001";  // 20 位设备编码
+    gb28181_cfg.server_ip = "192.168.1.10";          // SIP 服务器 IP（请修改）
+    gb28181_cfg.server_port = 5060;                   // SIP 服务器端口
+    gb28181_cfg.local_sip_port = 5060;                // 本地 SIP 监听端口
+    gb28181_cfg.sip_realm = "3402000000";            // SIP 域
+    gb28181_cfg.username = "34020000001320000001";   // SIP 用户名
+    gb28181_cfg.password = "123456";                  // SIP 密码（请修改）
+    gb28181_cfg.expires = 3600;                       // 注册有效期（秒）
+    gb28181_cfg.keepalive_interval = 30;              // 保活间隔（秒）
+
+    if (!gb28181::Gb28181Manager::Instance().Init(gb28181_cfg)) {
+        std::cerr << "[Main] Warning: GB28181 init failed, continuing..." << std::endl;
+    } else if (!gb28181::Gb28181Manager::Instance().Start()) {
+        std::cerr << "[Main] Warning: GB28181 start failed, continuing..." << std::endl;
+    } else {
+        std::cout << "[Main] GB28181 module started" << std::endl;
     }
 
     // ------------------------------------------------------------
