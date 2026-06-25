@@ -71,15 +71,15 @@ int main(int argc, char* argv[])
     // ------------------------------------------------------------
     // 1. Start RTSP server on port 8554
     // ------------------------------------------------------------
-    std::cout << "[Main] Starting RTSP server on rtsp://localhost:8554" << std::endl;
-    auto& rtsp_mgr = rtsp::RtspManager::Instance();
+    //std::cout << "[Main] Starting RTSP server on rtsp://localhost:8554" << std::endl;
+    //auto& rtsp_mgr = rtsp::RtspManager::Instance();
 
-    if (!g_video_file.empty()) {
-        rtsp_mgr.SetVideoFile(g_video_file);
-        std::cout << "[Main] Video file: " << g_video_file << std::endl;
-    }
+    //if (!g_video_file.empty()) {
+    //    rtsp_mgr.SetVideoFile(g_video_file);
+    //    std::cout << "[Main] Video file: " << g_video_file << std::endl;
+    //}
 
-    rtsp_mgr.Start(8554);
+    //rtsp_mgr.Start(8554);
 
     // ------------------------------------------------------------
     // 2. Create HTTP server on port 8080
