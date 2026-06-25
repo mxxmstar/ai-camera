@@ -168,6 +168,29 @@ if(WIN32)
 endif()
 
 # ============================================================
+# mDNS test program (standalone)
+# ============================================================
+add_executable(test_mdns tests/test_mdns.cpp
+    src/mdns/mdns_service.cpp
+    src/mdns/mdns_impl.cpp
+)
+
+target_include_directories(test_mdns PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/ai-camera
+    ${ASIO_INCLUDE_DIR}
+    ${SPDLOG_INCLUDE_DIR}
+)
+
+target_compile_definitions(test_mdns PRIVATE ASIO_STANDALONE)
+target_compile_options(test_mdns PRIVATE /utf-8)
+
+target_link_libraries(test_mdns PRIVATE Threads::Threads)
+if(WIN32)
+    target_link_libraries(test_mdns PRIVATE ws2_32 mswsock advapi32)
+endif()
+
+# ============================================================
 # Print configuration summary
 # ============================================================
 message(STATUS "")
