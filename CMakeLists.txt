@@ -52,6 +52,12 @@ if(GB28181_AVAILABLE)
     message(STATUS "GB28181 definitions added")
 endif()
 
+# Add /utf-8 option to support Chinese characters in source code (MSVC)
+if(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /utf-8)
+    message(STATUS "Added /utf-8 flag for MSVC")
+endif()
+
 # Add tinyxml2 source file (not in src/, so not picked up by GLOB_RECURSE)
 target_sources(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/third_party/tinyxml2/tinyxml2.cpp
@@ -108,6 +114,29 @@ if(BUILD_TESTS)
             target_link_libraries(${PROJECT_NAME}_tests PRIVATE ws2_32 mswsock advapi32)
         endif()
     endif()
+endif()
+
+# ============================================================
+# MQTT test program (standalone)
+# ============================================================
+add_executable(test_mqtt tests/test_mqtt.cpp
+    src/mqtt/mqtt_client.cpp
+    src/mqtt/mqtt_manager.cpp
+    src/mqtt/mqtt_types.cpp
+)
+
+target_include_directories(test_mqtt PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/ai-camera
+    ${ASIO_INCLUDE_DIR}
+)
+
+target_compile_definitions(test_mqtt PRIVATE ASIO_STANDALONE)
+target_compile_options(test_mqtt PRIVATE /utf-8)
+
+target_link_libraries(test_mqtt PRIVATE Threads::Threads)
+if(WIN32)
+    target_link_libraries(test_mqtt PRIVATE ws2_32 mswsock advapi32)
 endif()
 
 # ============================================================

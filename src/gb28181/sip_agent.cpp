@@ -206,10 +206,10 @@ bool SipAgent::Start() {
     
     // 启动 IO 线程
     io_thread_ = std::thread([this]() {
-        asio::error_code ec;
-        io_context_.run(ec);
-        if (ec) {
-            std::cerr << "[SIP] IO 线程错误: " << ec.message() << std::endl;
+        try {
+            io_context_.run();
+        } catch (const std::exception& e) {
+            std::cerr << "[SIP] IO 线程错误: " << e.what() << std::endl;
         }
     });
     

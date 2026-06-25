@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include "gb28181_config.h"
 #include "gb28181_types.h"
 
 namespace gb28181 {

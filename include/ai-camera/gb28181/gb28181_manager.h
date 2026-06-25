@@ -122,7 +122,7 @@ private:
 
     Gb28181Config          config_;         // 配置
     std::unique_ptr<SipAgent> sip_agent_;   // SIP 代理
-    std::mutex             mutex_;          // 保护状态的互斥锁
+    mutable std::mutex     mutex_;          // 保护状态的互斥锁（mutable 允许在 const 函数中使用）
     bool                   initialized_ = false;
     bool                   running_     = false;
     bool                   registered_  = false;
