@@ -20,7 +20,7 @@ Gb28181Manager& Gb28181Manager::Instance() {
 }
 
 Gb28181Manager::Gb28181Manager() {
-    std::cout << "[GB28181] Gb28181Manager 创建" << std::endl;
+    std::cout << "[GB28181] Gb28181Manager created" << std::endl;
 }
 
 Gb28181Manager::~Gb28181Manager() {
@@ -35,7 +35,7 @@ bool Gb28181Manager::Init(const Gb28181Config& config) {
     std::lock_guard<std::mutex> lock(mutex_);
 
     if (initialized_) {
-        std::cout << "[GB28181] 已经初始化，忽略重复调用" << std::endl;
+        std::cout << "[GB28181] Already initialized, ignoring duplicate call" << std::endl;
         return true;
     }
 
@@ -71,13 +71,13 @@ bool Gb28181Manager::Init(const Gb28181Config& config) {
     sip_agent_->SetCallbacks(callbacks);
 
     if (!sip_agent_->Init(config_)) {
-        std::cerr << "[GB28181] SipAgent 初始化失败" << std::endl;
+        std::cerr << "[GB28181] SipAgent initialization failed" << std::endl;
         sip_agent_.reset();
         return false;
     }
 
     initialized_ = true;
-    std::cout << "[GB28181] Gb28181Manager 初始化成功，设备ID: "
+    std::cout << "[GB28181] Gb28181Manager initialized successfully, device ID: "
               << config_.device_id << std::endl;
     return true;
 }
@@ -86,22 +86,22 @@ bool Gb28181Manager::Start() {
     std::lock_guard<std::mutex> lock(mutex_);
 
     if (!initialized_) {
-        std::cerr << "[GB28181] 尚未初始化，请先调用 Init()" << std::endl;
+        std::cerr << "[GB28181] Not initialized, please call Init() first" << std::endl;
         return false;
     }
 
     if (running_) {
-        std::cout << "[GB28181] 已经在运行" << std::endl;
+        std::cout << "[GB28181] Already running" << std::endl;
         return true;
     }
 
     if (!sip_agent_->Start()) {
-        std::cerr << "[GB28181] SipAgent 启动失败" << std::endl;
+        std::cerr << "[GB28181] SipAgent start failed" << std::endl;
         return false;
     }
 
     running_ = true;
-    std::cout << "[GB28181] Gb28181Manager 启动成功" << std::endl;
+    std::cout << "[GB28181] Gb28181Manager started successfully" << std::endl;
     return true;
 }
 
@@ -118,7 +118,7 @@ void Gb28181Manager::Stop() {
 
     running_    = false;
     registered_ = false;
-    std::cout << "[GB28181] Gb28181Manager 已停止" << std::endl;
+    std::cout << "[GB28181] Gb28181Manager stopped" << std::endl;
 }
 
 bool Gb28181Manager::IsRunning() const {
@@ -132,7 +132,7 @@ bool Gb28181Manager::IsRunning() const {
 
 bool Gb28181Manager::ReportCatalog(const std::vector<Gb28181Channel>& channels) {
     if (!sip_agent_ || !sip_agent_->IsRegistered()) {
-        std::cerr << "[GB28181] 未注册到平台，无法上报 Catalog" << std::endl;
+        std::cerr << "[GB28181] Not registered to platform, cannot report Catalog" << std::endl;
         return false;
     }
 
