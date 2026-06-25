@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(ai-camera LANGUAGES CXX)
+project(ai-camera LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -40,6 +40,8 @@ file(GLOB_RECURSE SOURCES
     src/*.cpp
     src/*.hpp
     src/*.h
+    src/*.c
+    src/*.hpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -188,6 +190,33 @@ target_compile_options(test_mdns PRIVATE /utf-8)
 target_link_libraries(test_mdns PRIVATE Threads::Threads)
 if(WIN32)
     target_link_libraries(test_mdns PRIVATE ws2_32 mswsock advapi32)
+endif()
+
+# ============================================================
+# media layer test program (standalone)
+# ============================================================
+add_executable(test_media tests/test_media.cpp
+    src/media/media_buffer.c
+    src/media/media_frame.c
+    src/media/media_packet.c
+    src/media/media_frame.cpp
+    src/media/media_packet.cpp
+    src/media/nalsource_adapter.cpp
+)
+
+target_include_directories(test_media PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/ai-camera
+    ${ASIO_INCLUDE_DIR}
+    ${SPDLOG_INCLUDE_DIR}
+)
+
+target_compile_definitions(test_media PRIVATE ASIO_STANDALONE)
+target_compile_options(test_media PRIVATE /utf-8)
+
+target_link_libraries(test_media PRIVATE Threads::Threads)
+if(WIN32)
+    target_link_libraries(test_media PRIVATE ws2_32 mswsock advapi32)
 endif()
 
 # ============================================================
