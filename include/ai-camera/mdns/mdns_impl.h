@@ -1,6 +1,6 @@
 /**
  * @file mdns_impl.h
- * @brief mDNS 内部实现类（简化版）
+ * @brief mDNS 内部实现类
  * 
  * 注意：此文件为内部实现，不对外暴露
  */
@@ -20,17 +20,21 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <functional>
 
 namespace mdns {
 
+// 前向声明
+class MdnsService;
+
 // ============================================================
-// 简化版 mDNS 实现类
+// mDNS 实现类
 // ============================================================
 
 class MdnsServiceImpl {
 public:
     /// @brief 构造函数
-    explicit MdnsServiceImpl(class MdnsService* parent);
+    explicit MdnsServiceImpl(MdnsService* parent);
 
     /// @brief 析构函数
     ~MdnsServiceImpl();
