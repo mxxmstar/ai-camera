@@ -19,6 +19,11 @@ set(ASIO_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/third_party/asio-1.36.0)
 add_definitions(-DASIO_STANDALONE)
 
 # ============================================================
+# spdlog (header-only)
+# ============================================================
+set(SPDLOG_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/third_party/spdlog-1.17.0/include)
+
+# ============================================================
 # GB28181 Module Configuration
 # ============================================================
 # GB28181 模块使用自主实现的轻量级 SIP 协议栈（基于 asio）
@@ -43,6 +48,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include/ai-camera
     ${ASIO_INCLUDE_DIR}
+    ${SPDLOG_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}/third_party/tinyxml2
 )
 
@@ -97,6 +103,7 @@ if(BUILD_TESTS)
             ${CMAKE_SOURCE_DIR}/include
             ${CMAKE_SOURCE_DIR}/include/ai-camera
             ${ASIO_INCLUDE_DIR}
+            ${SPDLOG_INCLUDE_DIR}
             ${CMAKE_SOURCE_DIR}/third_party/tinyxml2
         )
 
@@ -129,6 +136,7 @@ target_include_directories(test_mqtt PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include/ai-camera
     ${ASIO_INCLUDE_DIR}
+    ${SPDLOG_INCLUDE_DIR}
 )
 
 target_compile_definitions(test_mqtt PRIVATE ASIO_STANDALONE)
@@ -137,6 +145,26 @@ target_compile_options(test_mqtt PRIVATE /utf-8)
 target_link_libraries(test_mqtt PRIVATE Threads::Threads)
 if(WIN32)
     target_link_libraries(test_mqtt PRIVATE ws2_32 mswsock advapi32)
+endif()
+
+# ============================================================
+# Logger test program
+# ============================================================
+add_executable(test_logger tests/test_logger.cpp)
+
+target_include_directories(test_logger PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/ai-camera
+    ${ASIO_INCLUDE_DIR}
+    ${SPDLOG_INCLUDE_DIR}
+)
+
+target_compile_definitions(test_logger PRIVATE ASIO_STANDALONE)
+target_compile_options(test_logger PRIVATE /utf-8)
+
+target_link_libraries(test_logger PRIVATE Threads::Threads)
+if(WIN32)
+    target_link_libraries(test_logger PRIVATE ws2_32 mswsock advapi32)
 endif()
 
 # ============================================================
