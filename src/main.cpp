@@ -2,6 +2,7 @@
 #include "rtsp/rtspmgr.h"
 #include "onvif/onvif_manager.h"
 #include "gb28181/gb28181_manager.h"
+#include "ai-camera/serial/serial_http.h"
 
 #include <csignal>
 #include <iostream>
@@ -19,6 +20,7 @@ static void signal_handler(int /*signum*/)
     rtsp::RtspManager::Instance().Stop();
     onvif::OnvifManager::Instance().Stop();
     gb28181::Gb28181Manager::Instance().Stop();
+    serial::SerialManager::Instance().Stop();
 }
 
 static void print_usage(const char* prog)
@@ -93,6 +95,9 @@ int main(int argc, char* argv[])
 
     // Register ONVIF SOAP endpoints
     onvif::OnvifManager::Instance().RegisterRoutes(router);
+
+    // Register Serial module HTTP API endpoints
+    serial::RegisterSerialRoutes(router);
 
     router.get("/",
         [](const http::Request & /*req*/) -> http::Response
