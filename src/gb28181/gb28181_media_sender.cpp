@@ -16,8 +16,8 @@ bool Gb28181MediaSender::Start(const InviteMediaInfo& media_info,
     video_file_ = video_file;
     frame_rate_ = frame_rate;
 
-    // TODO: 创建 ASIO io_context、UDP socket、定时器
-    // 打开视频文件，启动定时器
+    // TODO: Create ASIO io_context, UDP socket, timer
+    // Open video file, start timer
 
     std::cout << "[GB28181] MediaSender started" << std::endl;
     streaming_ = true;
@@ -25,7 +25,7 @@ bool Gb28181MediaSender::Start(const InviteMediaInfo& media_info,
 }
 
 void Gb28181MediaSender::Stop() {
-    // TODO: 停止定时器，关闭 socket
+    // TODO: Stop timer, close socket
     streaming_ = false;
     std::cout << "[GB28181] MediaSender stopped" << std::endl;
 }
@@ -33,11 +33,11 @@ void Gb28181MediaSender::Stop() {
 void Gb28181MediaSender::OnTimer(const asio::error_code& ec) {
     if (ec || !streaming_) return;
 
-    // TODO: 读取帧 → PS 编码 → RTP 分片 → UDP 发送
+    // TODO: Read frame → PS encode → RTP fragment → UDP send
 }
 
 void Gb28181MediaSender::SendRtpPacket(const std::vector<uint8_t>& ps_data) {
-    // TODO: RTP 分片发送
+    // TODO: RTP fragment send
 }
 
 } // namespace gb28181

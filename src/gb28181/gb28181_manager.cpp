@@ -5,7 +5,7 @@
 #include <chrono>
 #include <ctime>
 
-// 使用 tinyxml2 构造 XML 报文
+// Use tinyxml2 to construct XML messages
 #include <tinyxml2.h>
 
 namespace gb28181 {
@@ -41,10 +41,10 @@ bool Gb28181Manager::Init(const Gb28181Config& config) {
 
     config_ = config;
 
-    // 创建 SipAgent
+    // Create SipAgent
     sip_agent_ = std::make_unique<SipAgent>();
 
-    // 注册 SIP 事件回调
+    // Register SIP event callbacks
     SipEventCallbacks callbacks;
     callbacks.on_invite = [this](const std::string& from, const std::string& to,
                                   const std::string& call_id, const std::string& sdp) {
@@ -136,11 +136,11 @@ bool Gb28181Manager::ReportCatalog(const std::vector<Gb28181Channel>& channels) 
         return false;
     }
 
-    // 构造 Catalog 响应 XML
-    std::string sn = "1";  // 序号，实际应从请求中获取
+    // Construct Catalog response XML
+    std::string sn = "1";  // Sequence number, should be obtained from request in practice
     std::string xml_body = BuildCatalogResponse(sn, channels);
 
-    // 通过 SIP MESSAGE 发送
+    // Send via SIP MESSAGE
     std::string platform_uri = "sip:" + config_.server_ip + ":" +
                                 std::to_string(config_.server_port);
     return sip_agent_->SendMessage(platform_uri, xml_body);
@@ -148,7 +148,7 @@ bool Gb28181Manager::ReportCatalog(const std::vector<Gb28181Channel>& channels) 
 
 bool Gb28181Manager::ReportDeviceInfo(const Gb28181DeviceInfo& info) {
     if (!sip_agent_ || !sip_agent_->IsRegistered()) {
-        std::cerr << "[GB28181] 未注册到平台，无法上报 DeviceInfo" << std::endl;
+        std::cerr << "[GB28181] Not registered to platform, cannot report DeviceInfo" << std::endl;
         return false;
     }
 
@@ -162,12 +162,12 @@ bool Gb28181Manager::ReportDeviceInfo(const Gb28181DeviceInfo& info) {
 
 bool Gb28181Manager::ReportAlarm(const Gb28181Alarm& alarm) {
     if (!sip_agent_ || !sip_agent_->IsRegistered()) {
-        std::cerr << "[GB28181] 未注册到平台，无法上报告警" << std::endl;
+        std::cerr << "[GB28181] Not registered to platform, cannot report alarm" << std::endl;
         return false;
     }
 
-    // 构造 Alarm 响应 XML（略，后续实现）
-    std::cout << "[GB28181] ReportAlarm: 暂未实现" << std::endl;
+    // Construct Alarm response XML (omitted, to be implemented later)
+    std::cout << "[GB28181] ReportAlarm: not implemented yet" << std::endl;
     return true;
 }
 
@@ -175,7 +175,7 @@ bool Gb28181Manager::SendKeepalive() {
     if (!sip_agent_ || !sip_agent_->IsRegistered()) {
         return false;
     }
-    return sip_agent_->SendRegister();  // 保活就是重新发送 REGISTER
+    return sip_agent_->SendRegister();  // Keepalive is re-sending REGISTER
 }
 
 // ============================================================================
@@ -200,10 +200,10 @@ void Gb28181Manager::OnInvite(const std::string& from, const std::string& to,
                                const std::string& call_id, const std::string& sdp) {
     std::cout << "[GB28181] OnInvite: call_id=" << call_id
               << ", from=" << from << std::endl;
-    std::cout << "[GB28181] 收到 SDP:" << std::endl << sdp << std::endl;
+    std::cout << "[GB28181] Received SDP:" << std::endl << sdp << std::endl;
 
-    // TODO: 解析 SDP，获取平台接收地址和端口，启动 RTP 推流
-    // 目前先回复 200 OK（带占位 SDP）
+    // TODO: Parse SDP, get platform receive address and port, start RTP streaming
+    // Currently reply with 200 OK (with placeholder SDP)
     if (sip_agent_) {
         std::string local_sdp = "v=0\r\n"
             "o=" + config_.device_id + " 0 0 IN IP4 127.0.0.1\r\n"
@@ -219,24 +219,24 @@ void Gb28181Manager::OnInvite(const std::string& from, const std::string& to,
 
 void Gb28181Manager::OnBye(const std::string& call_id) {
     std::cout << "[GB28181] OnBye: call_id=" << call_id << std::endl;
-    // TODO: 停止对应的 RTP 推流
+    // TODO: Stop corresponding RTP streaming
 }
 
 void Gb28181Manager::OnMessage(const std::string& from, const std::string& xml_body) {
     std::cout << "[GB28181] OnMessage: from=" << from << std::endl;
-    std::cout << "[GB28181] XML 内容:" << std::endl << xml_body << std::endl;
+    std::cout << "[GB28181] XML content:" << std::endl << xml_body << std::endl;
 
-    // 解析 XML，判断命令类型
-    // 使用 tinyxml2 解析
+    // Parse XML, determine command type
+    // Use tinyxml2 to parse
     tinyxml2::XMLDocument doc;
     if (doc.Parse(xml_body.c_str()) != tinyxml2::XML_SUCCESS) {
-        std::cerr << "[GB28181] XML 解析失败" << std::endl;
+        std::cerr << "[GB28181] XML parse failed" << std::endl;
         return;
     }
 
     tinyxml2::XMLElement* cmd_type_elem = doc.FirstChildElement("CmdType");
     if (!cmd_type_elem) {
-        // 可能在 Response 节点内
+        // May be inside Response node
         cmd_type_elem = doc.FirstChildElement("Response");
         if (cmd_type_elem) {
             cmd_type_elem = cmd_type_elem->FirstChildElement("CmdType");
@@ -244,16 +244,16 @@ void Gb28181Manager::OnMessage(const std::string& from, const std::string& xml_b
     }
 
     if (!cmd_type_elem) {
-        std::cerr << "[GB28181] 无法识别 CmdType" << std::endl;
+        std::cerr << "[GB28181] Cannot recognize CmdType" << std::endl;
         return;
     }
 
     std::string cmd_type = cmd_type_elem->GetText();
-    std::cout << "[GB28181] 命令类型: " << cmd_type << std::endl;
+    std::cout << "[GB28181] Command type: " << cmd_type << std::endl;
 
     if (cmd_type == "Catalog") {
-        // 目录查询：上报设备通道信息
-        // TODO: 从配置或实际设备获取通道列表
+        // Catalog query: report device channel info
+        // TODO: Get channel list from config or actual device
         std::vector<Gb28181Channel> channels;
         Gb28181Channel ch;
         ch.device_id = config_.device_id;
@@ -262,36 +262,36 @@ void Gb28181Manager::OnMessage(const std::string& from, const std::string& xml_b
         channels.push_back(ch);
         ReportCatalog(channels);
     } else if (cmd_type == "DeviceInfo") {
-        // 设备信息查询
+        // Device info query
         Gb28181DeviceInfo info;
-        info.ip_addr = "127.0.0.1";  // TODO: 获取本机 IP
+        info.ip_addr = "127.0.0.1";  // TODO: Get local IP
         info.port    = config_.local_sip_port;
         ReportDeviceInfo(info);
     } else if (cmd_type == "Keepalive") {
-        // 心跳响应（平台发来的心跳确认，一般不需要回复）
-        std::cout << "[GB28181] 收到心跳确认" << std::endl;
+        // Keepalive response (heartbeat confirmation from platform, usually no need to reply)
+        std::cout << "[GB28181] Received heartbeat confirmation" << std::endl;
     } else {
-        std::cout << "[GB28181] 未处理的命令类型: " << cmd_type << std::endl;
+        std::cout << "[GB28181] Unhandled command type: " << cmd_type << std::endl;
     }
 }
 
 void Gb28181Manager::OnRegisterSuccess() {
     std::lock_guard<std::mutex> lock(mutex_);
     registered_ = true;
-    std::cout << "[GB28181] 注册成功！" << std::endl;
+    std::cout << "[GB28181] Registration successful!" << std::endl;
 }
 
 void Gb28181Manager::OnRegisterFailed(int status_code, const std::string& reason) {
     std::lock_guard<std::mutex> lock(mutex_);
     registered_ = false;
-    std::cerr << "[GB28181] 注册失败: " << status_code << " " << reason << std::endl;
+    std::cerr << "[GB28181] Registration failed: " << status_code << " " << reason << std::endl;
 }
 
 void Gb28181Manager::OnSubscribe(const std::string& from, const std::string& call_id,
                                   const std::string& event_type) {
     std::cout << "[GB28181] OnSubscribe: event_type=" << event_type
               << ", from=" << from << std::endl;
-    // TODO: 处理订阅，定期上报事件
+    // TODO: Handle subscription, periodically report events
 }
 
 // ============================================================================

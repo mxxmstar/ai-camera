@@ -147,7 +147,7 @@ SipMessage* SipMessage::Parse(const std::string& raw_message) {
     
     // 读取第一行（请求行或状态行）
     if (!std::getline(iss, line) || line.empty()) {
-        std::cerr << "[SIP] 解析失败：空消息" << std::endl;
+        std::cerr << "[SIP] Parse failed: empty message" << std::endl;
         return nullptr;
     }
     
@@ -197,7 +197,7 @@ SipMessage* SipMessage::Parse(const std::string& raw_message) {
         std::string sip_version;
         line_ss >> sip_version;
         if (sip_version != "SIP/2.0") {
-            std::cerr << "[SIP] 不支持的 SIP 版本：" << sip_version << std::endl;
+            std::cerr << "[SIP] Unsupported SIP version: " << sip_version << std::endl;
             delete msg;
             return nullptr;
         }

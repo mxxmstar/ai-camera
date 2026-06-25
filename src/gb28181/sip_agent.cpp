@@ -69,8 +69,8 @@ bool SipTransport::SendMessage(const asio::ip::udp::endpoint& remote_endpoint,
               << remote_endpoint.address().to_string() << ":" 
               << remote_endpoint.port() << std::endl;
     
-    // 打印发送的 SIP 消息（调试用）
-    // std::cout << "[SIP] 发送消息:\n" << message << std::endl;
+    // Print sent SIP message (for debugging)
+    // std::cout << "[SIP] Sent message:\n" << message << std::endl;
     
     return true;
 }
@@ -111,7 +111,7 @@ void SipTransport::StartReceive() {
         return;
     }
     
-    // 异步接收消息
+    // Asynchronous receive message
     socket_.async_receive_from(
         asio::buffer(receive_buffer_),
         remote_endpoint_,
@@ -128,29 +128,29 @@ void SipTransport::HandleReceive(const asio::error_code& error, size_t bytes_tra
     
     if (error) {
         if (error == asio::error::operation_aborted) {
-            // 操作被取消（正常停止）
+            // Operation cancelled (normal stop)
             return;
         }
         
-        std::cerr << "[SIP] 接收错误: " << error.message() << std::endl;
+        std::cerr << "[SIP] Receive error: " << error.message() << std::endl;
     } else {
-        // 成功接收到消息
+        // Successfully received message
         std::string message(receive_buffer_.data(), bytes_transferred);
         
         std::cout << "[SIP] Received " << bytes_transferred << " bytes from "
                   << remote_endpoint_.address().to_string() << ":" 
                   << remote_endpoint_.port() << std::endl;
         
-        // 打印接收到的 SIP 消息（调试用）
-        // std::cout << "[SIP] 接收消息:\n" << message << std::endl;
+        // Print received SIP message (for debugging)
+        // std::cout << "[SIP] Received message:\n" << message << std::endl;
         
-        // 调用回调函数处理消息
+        // Call callback function to process message
         if (receive_callback_) {
             receive_callback_(remote_endpoint_, message);
         }
     }
     
-    // 继续接收下一条消息
+    // Continue to receive next message
     StartReceive();
 }
 
@@ -170,10 +170,10 @@ bool SipAgent::Init(const Gb28181Config& config) {
     config_ = config;
     local_port_ = config.local_sip_port;
     
-    // 获取本地 IP 地址
-    // 注意：这里使用简单的实现，实际应该获取本机所有 IP 地址
-    // 这里暂时使用 "127.0.0.1"，实际应该获取本机 IP
-    local_ip_ = "127.0.0.1";  // TODO: 获取本机实际 IP 地址
+    // Get local IP address
+    // Note: Simple implementation here, should get all local IP addresses in production
+    // Temporarily use "127.0.0.1", should get actual local IP in production
+    local_ip_ = "127.0.0.1";  // TODO: Get actual local IP address
     
     std::cout << "[SIP] SipAgent initialized, device ID: " << config.device_id 
               << ", local port: " << local_port_ << std::endl;
@@ -187,10 +187,10 @@ bool SipAgent::Start() {
         return true;
     }
     
-    // 创建传输层
+    // Create transport layer
     transport_ = std::make_shared<SipTransport>(io_context_, local_port_);
     
-    // 设置接收回调
+    // Set receive callback
     transport_->SetReceiveCallback(
         [this](const asio::ip::udp::endpoint& remote_endpoint,
                const std::string& message) {
@@ -198,13 +198,13 @@ bool SipAgent::Start() {
         }
     );
     
-    // 启动传输层
+    // Start transport layer
     if (!transport_->Start()) {
         std::cerr << "[SIP] Transport layer start failed" << std::endl;
         return false;
     }
     
-    // 启动 IO 线程
+    // Start IO thread
     io_thread_ = std::thread([this]() {
         try {
             io_context_.run();
@@ -215,10 +215,10 @@ bool SipAgent::Start() {
     
     running_ = true;
     
-    // 发送注册请求
+    // Send registration request
     if (!SendRegister()) {
         std::cerr << "[SIP] Register request send failed" << std::endl;
-        // 不返回 false，允许继续运行（可能稍后重试）
+        // Don't return false, allow to continue running (may retry later)
     }
     
     std::cout << "[SIP] SipAgent started successfully" << std::endl;
@@ -233,9 +233,9 @@ void SipAgent::Stop() {
     running_ = false;
     registered_ = false;
     
-    // 取消注册（发送 REGISTER  with Expires: 0）
+    // Unregister (send REGISTER with Expires: 0)
     if (transport_ && transport_->IsRunning()) {
-        // 构造取消注册请求
+        // Construct unregister request
         SipRequest unregister_req(SipMessage::Method::REGISTER, 
                                   "sip:" + config_.server_ip + ":" + 
                                   std::to_string(config_.server_port));
@@ -246,17 +246,17 @@ void SipAgent::Stop() {
         unregister_req.SetCSeq(std::to_string(cseq_++) + " REGISTER");
         unregister_req.SetVia(BuildViaHeader());
         unregister_req.SetContact(BuildContactHeader());
-        unregister_req.SetHeader("Expires", "0");  // 0 表示取消注册
+        unregister_req.SetHeader("Expires", "0");  // 0 means unregister
         unregister_req.SetHeader("Content-Length", "0");
         
         std::string raw_message = unregister_req.Serialize();
         transport_->SendMessage(config_.server_ip, config_.server_port, raw_message);
         
-        // 等待一小段时间确保消息发送出去
+        // Wait a short time to ensure message is sent
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     
-    // 停止定时器
+    // Stop timers
     if (keepalive_timer_) {
         keepalive_timer_->cancel();
     }
@@ -264,15 +264,15 @@ void SipAgent::Stop() {
         register_retry_timer_->cancel();
     }
     
-    // 停止传输层
+    // Stop transport layer
     if (transport_) {
         transport_->Stop();
     }
     
-    // 停止 IO 上下文
+    // Stop IO context
     io_context_.stop();
     
-    // 等待 IO 线程结束
+    // Wait for IO thread to finish
     if (io_thread_.joinable()) {
         io_thread_.join();
     }
@@ -286,10 +286,10 @@ bool SipAgent::SendMessage(const std::string& to, const std::string& xml_body) {
         return false;
     }
     
-    // 构造 MESSAGE 请求
+    // Construct MESSAGE request
     SipRequest message_req(SipMessage::Method::MESSAGE, to);
     
-    // 设置必要的头字段
+    // Set necessary headers
     message_req.SetCallId(SipMessage::GenerateCallId(local_ip_));
     message_req.SetFrom(BuildFromHeader());
     message_req.SetTo(BuildToHeader(to));
@@ -300,27 +300,27 @@ bool SipAgent::SendMessage(const std::string& to, const std::string& xml_body) {
     message_req.SetBody(xml_body);
     message_req.SetHeader("Content-Length", std::to_string(xml_body.length()));
     
-    // 序列化并发送
+    // Serialize and send
     std::string raw_message = message_req.Serialize();
     
-    std::cout << "[SIP] 发送 MESSAGE 到 " << to << std::endl;
+    std::cout << "[SIP] Sending MESSAGE to " << to << std::endl;
     
     return transport_->SendMessage(config_.server_ip, config_.server_port, raw_message);
 }
 
 bool SipAgent::SendRegister() {
     if (!running_ || !transport_) {
-        std::cerr << "[SIP] 注册失败：SipAgent 未启动" << std::endl;
+        std::cerr << "[SIP] Register failed: SipAgent not started" << std::endl;
         return false;
     }
     
-    // 构造 REGISTER 请求
+    // Construct REGISTER request
     SipRequest register_req(
         SipMessage::Method::REGISTER,
         "sip:" + config_.server_ip + ":" + std::to_string(config_.server_port)
     );
     
-    // 设置必要的头字段
+    // Set necessary headers
     register_req.SetCallId(SipMessage::GenerateCallId(local_ip_));
     register_req.SetFrom(BuildFromHeader());
     register_req.SetTo(BuildToHeader("sip:" + config_.device_id + "@" + config_.sip_realm));
@@ -330,9 +330,9 @@ bool SipAgent::SendRegister() {
     register_req.SetHeader("Expires", std::to_string(config_.expires));
     register_req.SetHeader("Content-Length", "0");
     
-    // 如果有认证信息，添加 Authorization 头
+    // If authentication info exists, add Authorization header
     if (!auth_nonce_.empty()) {
-        // 构造 Authorization 头
+        // Construct Authorization header
         std::string uri = "sip:" + config_.server_ip + ":" + std::to_string(config_.server_port);
         std::string response = CalculateSipDigestResponse(
             config_.username,
@@ -363,10 +363,10 @@ bool SipAgent::SendRegister() {
         register_req.SetHeader("Authorization", auth_header.str());
     }
     
-    // 序列化并发送
+    // Serialize and send
     std::string raw_message = register_req.Serialize();
     
-    std::cout << "[SIP] 发送 REGISTER 到 " << config_.server_ip << ":" 
+    std::cout << "[SIP] Sending REGISTER to " << config_.server_ip << ":" 
               << config_.server_port << std::endl;
     
     return transport_->SendMessage(config_.server_ip, config_.server_port, raw_message);
@@ -375,74 +375,74 @@ bool SipAgent::SendRegister() {
 bool SipAgent::SendInviteResponse(const std::string& call_id, const std::string& to,
                                   const std::string& sdp) {
     if (!running_ || !transport_) {
-        std::cerr << "[SIP] 发送失败：SipAgent 未启动" << std::endl;
+        std::cerr << "[SIP] Send failed: SipAgent not started" << std::endl;
         return false;
     }
     
-    // 构造 200 OK 响应
+    // Construct 200 OK response
     SipResponse response(200, "OK");
     
-    // 设置必要的头字段
+    // Set necessary headers
     response.SetCallId(call_id);
     response.SetFrom(BuildFromHeader());
     response.SetTo(BuildToHeader(to) + ";tag=" + SipMessage::GenerateTag());
-    response.SetCSeq("1 INVITE");  // TODO: 从原始请求获取 CSeq
+    response.SetCSeq("1 INVITE");  // TODO: Get CSeq from original request
     response.SetHeader("Content-Type", "application/sdp");
     response.SetBody(sdp);
     response.SetHeader("Content-Length", std::to_string(sdp.length()));
     
-    // 序列化并发送
+    // Serialize and send
     std::string raw_message = response.Serialize();
     
-    std::cout << "[SIP] 发送 INVITE 200 OK，call_id: " << call_id << std::endl;
+    std::cout << "[SIP] Sending INVITE 200 OK, call_id: " << call_id << std::endl;
     
     return transport_->SendMessage(config_.server_ip, config_.server_port, raw_message);
 }
 
 bool SipAgent::SendByeResponse(const std::string& call_id, const std::string& to) {
     if (!running_ || !transport_) {
-        std::cerr << "[SIP] 发送失败：SipAgent 未启动" << std::endl;
+        std::cerr << "[SIP] Send failed: SipAgent not started" << std::endl;
         return false;
     }
     
-    // 构造 200 OK 响应
+    // Construct 200 OK response
     SipResponse response(200, "OK");
     
-    // 设置必要的头字段
+    // Set necessary headers
     response.SetCallId(call_id);
     response.SetFrom(BuildFromHeader());
     response.SetTo(BuildToHeader(to));
-    response.SetCSeq("1 BYE");  // TODO: 从原始请求获取 CSeq
+    response.SetCSeq("1 BYE");  // TODO: Get CSeq from original request
     response.SetHeader("Content-Length", "0");
     
-    // 序列化并发送
+    // Serialize and send
     std::string raw_message = response.Serialize();
     
-    std::cout << "[SIP] 发送 BYE 200 OK，call_id: " << call_id << std::endl;
+    std::cout << "[SIP] Sending BYE 200 OK, call_id: " << call_id << std::endl;
     
     return transport_->SendMessage(config_.server_ip, config_.server_port, raw_message);
 }
 
 bool SipAgent::SendMessageResponse(const std::string& call_id, const std::string& to) {
     if (!running_ || !transport_) {
-        std::cerr << "[SIP] 发送失败：SipAgent 未启动" << std::endl;
+        std::cerr << "[SIP] Send failed: SipAgent not started" << std::endl;
         return false;
     }
     
-    // 构造 200 OK 响应
+    // Construct 200 OK response
     SipResponse response(200, "OK");
     
-    // 设置必要的头字段
+    // Set necessary headers
     response.SetCallId(call_id);
     response.SetFrom(BuildFromHeader());
     response.SetTo(BuildToHeader(to));
-    response.SetCSeq("1 MESSAGE");  // TODO: 从原始请求获取 CSeq
+    response.SetCSeq("1 MESSAGE");  // TODO: Get CSeq from original request
     response.SetHeader("Content-Length", "0");
     
-    // 序列化并发送
+    // Serialize and send
     std::string raw_message = response.Serialize();
     
-    std::cout << "[SIP] 发送 MESSAGE 200 OK，call_id: " << call_id << std::endl;
+    std::cout << "[SIP] Sending MESSAGE 200 OK, call_id: " << call_id << std::endl;
     
     return transport_->SendMessage(config_.server_ip, config_.server_port, raw_message);
 }
@@ -453,15 +453,15 @@ bool SipAgent::SendMessageResponse(const std::string& call_id, const std::string
 
 void SipAgent::HandleReceivedMessage(const asio::ip::udp::endpoint& remote_endpoint,
                                      const std::string& raw_message) {
-    // 解析 SIP 消息
+    // Parse SIP message
     SipMessage* message = SipMessage::Parse(raw_message);
     
     if (!message) {
-        std::cerr << "[SIP] 消息解析失败" << std::endl;
+        std::cerr << "[SIP] Message parse failed" << std::endl;
         return;
     }
     
-    // 根据消息类型分发处理
+    // Dispatch processing based on message type
     if (message->GetType() == SipMessage::Type::REQUEST) {
         HandleRequest(remote_endpoint, message);
     } else {
@@ -476,74 +476,75 @@ void SipAgent::HandleRequest(const asio::ip::udp::endpoint& remote_endpoint,
     SipMessage::Method method = message->GetMethod();
     std::string call_id = message->GetCallId();
     
-    std::cout << "[SIP] 收到请求: " << SipMessage::MethodToString(method)
+    std::cout << "[SIP] Received request: " << SipMessage::MethodToString(method)
               << ", Call-ID: " << call_id << std::endl;
     
     switch (method) {
         case SipMessage::Method::INVITE: {
-            // 处理 INVITE（实时点播请求）
+            // Handle INVITE (real-time playback request)
             std::string from = message->GetFrom();
             std::string to = message->GetTo();
             std::string sdp = message->GetBody();
             
-            std::cout << "[SIP] 收到 INVITE，from: " << from << ", to: " << to << std::endl;
+            std::cout << "[SIP] Received INVITE, from: " << from << ", to: " << to << std::endl;
             
-            // 触发回调
+            // Trigger callback
             if (callbacks_.on_invite) {
                 callbacks_.on_invite(from, to, call_id, sdp);
             }
             
-            // 发送 200 OK 响应（带 SDP）
-            // 注意：这里应该由上层调用 SendInviteResponse，这里先发送一个简单的 200 OK
-            SendInviteResponse(call_id, from, "v=0\r\n...");  // TODO: 构造完整的 SDP
+            // Send 200 OK response (with SDP)
+            // Note: Should be called by upper layer via SendInviteResponse
+            // Here we send a simple 200 OK first
+            SendInviteResponse(call_id, from, "v=0\r\n...");  // TODO: Construct complete SDP
             break;
         }
         
         case SipMessage::Method::BYE: {
-            // 处理 BYE（结束会话请求）
-            std::cout << "[SIP] 收到 BYE，Call-ID: " << call_id << std::endl;
+            // Handle BYE (session termination request)
+            std::cout << "[SIP] Received BYE, Call-ID: " << call_id << std::endl;
             
-            // 触发回调
+            // Trigger callback
             if (callbacks_.on_bye) {
                 callbacks_.on_bye(call_id);
             }
             
-            // 发送 200 OK 响应
+            // Send 200 OK response
             SendByeResponse(call_id, message->GetFrom());
             break;
         }
         
         case SipMessage::Method::MESSAGE: {
-            // 处理 MESSAGE（XML 报文请求）
+            // Handle MESSAGE (XML message request)
             std::string from = message->GetFrom();
             std::string xml_body = message->GetBody();
             
-            std::cout << "[SIP] 收到 MESSAGE，from: " << from << std::endl;
+            std::cout << "[SIP] Received MESSAGE, from: " << from << std::endl;
             
-            // 触发回调
+            // Trigger callback
             if (callbacks_.on_message) {
                 callbacks_.on_message(from, xml_body);
             }
             
-            // 发送 200 OK 响应
+            // Send 200 OK response
             SendMessageResponse(call_id, from);
             break;
         }
         
         case SipMessage::Method::SUBSCRIBE: {
-            // 处理 SUBSCRIBE（订阅请求）
+            // Handle SUBSCRIBE (subscription request)
             std::string from = message->GetFrom();
             std::string event_type = message->GetHeader("Event");
             
-            std::cout << "[SIP] 收到 SUBSCRIBE，from: " << from 
+            std::cout << "[SIP] Received SUBSCRIBE, from: " << from 
                       << ", event: " << event_type << std::endl;
             
-            // 触发回调
+            // Trigger callback
             if (callbacks_.on_subscribe) {
                 callbacks_.on_subscribe(from, call_id, event_type);
             }
             
-            // 发送 200 OK 响应
+            // Send 200 OK response
             SipResponse response(200, "OK");
             response.SetCallId(call_id);
             response.SetFrom(BuildFromHeader());
@@ -557,16 +558,16 @@ void SipAgent::HandleRequest(const asio::ip::udp::endpoint& remote_endpoint,
         }
         
         case SipMessage::Method::ACK: {
-            // 处理 ACK（确认）
-            std::cout << "[SIP] 收到 ACK，Call-ID: " << call_id << std::endl;
+            // Handle ACK (acknowledgment)
+            std::cout << "[SIP] Received ACK, Call-ID: " << call_id << std::endl;
             break;
         }
         
         case SipMessage::Method::CANCEL: {
-            // 处理 CANCEL（取消）
-            std::cout << "[SIP] 收到 CANCEL，Call-ID: " << call_id << std::endl;
+            // Handle CANCEL (cancel)
+            std::cout << "[SIP] Received CANCEL, Call-ID: " << call_id << std::endl;
             
-            // 发送 200 OK 响应
+            // Send 200 OK response
             SipResponse response(200, "OK");
             response.SetCallId(call_id);
             response.SetFrom(BuildFromHeader());
@@ -580,9 +581,9 @@ void SipAgent::HandleRequest(const asio::ip::udp::endpoint& remote_endpoint,
         }
         
         default: {
-            std::cout << "[SIP] 未支持的方法: " << SipMessage::MethodToString(method) << std::endl;
+            std::cout << "[SIP] Unsupported method: " << SipMessage::MethodToString(method) << std::endl;
             
-            // 发送 501 Not Implemented 响应
+            // Send 501 Not Implemented response
             SipResponse response(501, "Not Implemented");
             response.SetCallId(call_id);
             response.SetFrom(BuildFromHeader());
@@ -603,38 +604,38 @@ void SipAgent::HandleResponse(const asio::ip::udp::endpoint& remote_endpoint,
     std::string reason = message->GetReasonPhrase();
     std::string call_id = message->GetCallId();
     
-    std::cout << "[SIP] 收到响应: " << status_code << " " << reason
+    std::cout << "[SIP] Received response: " << status_code << " " << reason
               << ", Call-ID: " << call_id << std::endl;
     
     if (status_code == 200) {
-        // 成功响应
-        std::cout << "[SIP] 注册成功" << std::endl;
+        // Success response
+        std::cout << "[SIP] Registration successful" << std::endl;
         registered_ = true;
         
-        // 启动保活定时器
+        // Start keepalive timer
         keepalive_timer_ = std::make_shared<asio::steady_timer>(io_context_);
         KeepaliveTimerCallback(asio::error_code());
         
-        // 触发回调
+        // Trigger callback
         if (callbacks_.on_register_success) {
             callbacks_.on_register_success();
         }
     } else if (status_code == 401) {
-        // 未授权，需要认证
-        std::cout << "[SIP] 需要认证（401 Unauthorized）" << std::endl;
+        // Unauthorized, need authentication
+        std::cout << "[SIP] Authentication required (401 Unauthorized)" << std::endl;
         
-        // 处理认证挑战
+        // Handle authentication challenge
         HandleAuthentication(remote_endpoint, message, "REGISTER");
     } else {
-        // 其他错误
-        std::cerr << "[SIP] 注册失败: " << status_code << " " << reason << std::endl;
+        // Other errors
+        std::cerr << "[SIP] Registration failed: " << status_code << " " << reason << std::endl;
         
-        // 触发回调
+        // Trigger callback
         if (callbacks_.on_register_failed) {
             callbacks_.on_register_failed(status_code, reason);
         }
         
-        // 启动注册重试定时器
+        // Start registration retry timer
         register_retry_timer_ = std::make_shared<asio::steady_timer>(io_context_);
         register_retry_timer_->expires_after(std::chrono::seconds(10));
         register_retry_timer_->async_wait(
@@ -648,16 +649,16 @@ void SipAgent::HandleResponse(const asio::ip::udp::endpoint& remote_endpoint,
 void SipAgent::HandleAuthentication(const asio::ip::udp::endpoint& remote_endpoint,
                                     SipMessage* response,
                                     const std::string& original_method) {
-    // 获取 WWW-Authenticate 头
+    // Get WWW-Authenticate header
     std::string www_auth = response->GetHeader("WWW-Authenticate");
     if (www_auth.empty()) {
-        std::cerr << "[SIP] 401 响应缺少 WWW-Authenticate 头" << std::endl;
+        std::cerr << "[SIP] 401 response missing WWW-Authenticate header" << std::endl;
         return;
     }
     
     std::cout << "[SIP] WWW-Authenticate: " << www_auth << std::endl;
     
-    // 解析认证信息
+    // Parse authentication info
     SipAuthInfo auth_info = ParseWwwAuthenticate(www_auth);
     
     auth_realm_ = auth_info.realm;
@@ -666,10 +667,10 @@ void SipAgent::HandleAuthentication(const asio::ip::udp::endpoint& remote_endpoi
     auth_qop_ = auth_info.qop;
     auth_nc_ = 1;
     
-    std::cout << "[SIP] 认证信息 - realm: " << auth_realm_ 
+    std::cout << "[SIP] Auth info - realm: " << auth_realm_ 
               << ", nonce: " << auth_nonce_ << std::endl;
     
-    // 重新发送带认证的 REGISTER 请求
+    // Resend REGISTER request with authentication
     SendRegister();
 }
 
@@ -712,12 +713,12 @@ void SipAgent::KeepaliveTimerCallback(const asio::error_code& error) {
         return;
     }
     
-    std::cout << "[SIP] 发送保活 REGISTER" << std::endl;
+    std::cout << "[SIP] Sending keepalive REGISTER" << std::endl;
     
-    // 发送保活 REGISTER
+    // Send keepalive REGISTER
     SendRegister();
     
-    // 重新设置定时器
+    // Reset timer
     keepalive_timer_->expires_after(std::chrono::seconds(config_.keepalive_interval));
     keepalive_timer_->async_wait(
         [this](const asio::error_code& error) {
@@ -731,9 +732,9 @@ void SipAgent::RegisterRetryTimerCallback(const asio::error_code& error) {
         return;
     }
     
-    std::cout << "[SIP] 重试注册" << std::endl;
+    std::cout << "[SIP] Retrying registration" << std::endl;
     
-    // 重新发送注册请求
+    // Resend registration request
     SendRegister();
 }
 

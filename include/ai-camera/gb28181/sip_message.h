@@ -8,83 +8,83 @@
 namespace gb28181 {
 
 // ============================================================================
-// SipMessage: Base class for SIP messages (requests and responses)
+// SipMessage: SIP 消息基类（请求和响应）
 // ============================================================================
 class SipMessage {
 public:
-    // SIP message type
+    // SIP 消息类型
     enum class Type {
-        REQUEST,   // Request
-        RESPONSE   // Response
+        REQUEST,   // 请求
+        RESPONSE   // 响应
     };
 
-    // SIP method type
+    // SIP 方法类型
     enum class Method {
         UNKNOWN,
-        REGISTER,  // Register
-        INVITE,    // Invite (for video streaming)
-        ACK,       // Acknowledge
-        BYE,       // End session
-        CANCEL,    // Cancel
-        MESSAGE,   // Message (for GB28181 XML message transmission)
-        OPTIONS,   // Options
-        SUBSCRIBE, // Subscribe
-        NOTIFY     // Notify
+        REGISTER,  // 注册
+        INVITE,    // 邀请（用于点播）
+        ACK,       // 确认
+        BYE,       // 结束会话
+        CANCEL,    // 取消
+        MESSAGE,   // 消息（用于 GB28181 XML 报文传输）
+        OPTIONS,   // 选项
+        SUBSCRIBE, // 订阅
+        NOTIFY     // 通知
     };
 
-    // SIP response status codes
+    // SIP 响应状态码
     enum class StatusCode {
-        TRYING              = 100,  // Trying
-        RINGING             = 180,  // Ringing
-        OK                  = 200,  // OK
-        MULTIPLE_CHOICES    = 300,  // Multiple Choices
-        MOVED_PERMANENTLY   = 301,  // Moved Permanently
-        BAD_REQUEST         = 400,  // Bad Request
-        UNAUTHORIZED        = 401,  // Unauthorized
-        FORBIDDEN           = 403,  // Forbidden
-        NOT_FOUND           = 404,  // Not Found
-        METHOD_NOT_ALLOWED  = 405,  // Method Not Allowed
-        REQUEST_TIMEOUT     = 408,  // Request Timeout
-        INTERNAL_ERROR      = 500,  // Internal Server Error
-        SERVICE_UNAVAILABLE = 503   // Service Unavailable
+        TRYING              = 100,  // 尝试中
+        RINGING             = 180,  // 振铃
+        OK                  = 200,  // 成功
+        MULTIPLE_CHOICES    = 300,  // 多重选择
+        MOVED_PERMANENTLY   = 301,  // 永久移动
+        BAD_REQUEST         = 400,  // 错误请求
+        UNAUTHORIZED        = 401,  // 未授权
+        FORBIDDEN           = 403,  // 禁止
+        NOT_FOUND           = 404,  // 未找到
+        METHOD_NOT_ALLOWED  = 405,  // 方法不允许
+        REQUEST_TIMEOUT     = 408,  // 请求超时
+        INTERNAL_ERROR      = 500,  // 内部错误
+        SERVICE_UNAVAILABLE = 503   // 服务不可用
     };
 
     SipMessage() = default;
     virtual ~SipMessage() = default;
 
-    // Get message type
+    // 获取消息类型
     Type GetType() const { return type_; }
 
-    // Get/Set SIP method
+    // 获取/设置 SIP 方法
     Method GetMethod() const { return method_; }
     void SetMethod(Method method) { method_ = method; }
 
-    // Get/Set SIP request URI
+    // 获取/设置 SIP 请求 URI
     const std::string& GetRequestUri() const { return request_uri_; }
     void SetRequestUri(const std::string& uri) { request_uri_ = uri; }
 
-    // Get/Set status code (response only)
+    // 获取/设置状态码（仅响应）
     uint16_t GetStatusCode() const { return status_code_; }
     void SetStatusCode(uint16_t code) { status_code_ = code; }
 
-    // Get/Set reason phrase (response only)
+    // 获取/设置原因短语（仅响应）
     const std::string& GetReasonPhrase() const { return reason_phrase_; }
     void SetReasonPhrase(const std::string& phrase) { reason_phrase_ = phrase; }
 
-    // SIP header operations
+    // SIP 头字段操作
     void SetHeader(const std::string& name, const std::string& value);
     std::string GetHeader(const std::string& name) const;
     bool HasHeader(const std::string& name) const;
     void RemoveHeader(const std::string& name);
 
-    // Get all headers
+    // 获取所有头字段
     const std::map<std::string, std::string>& GetHeaders() const { return headers_; }
 
-    // Get/Set message body
+    // 获取/设置消息体
     const std::string& GetBody() const { return body_; }
     void SetBody(const std::string& body) { body_ = body; }
 
-    // Convenience methods for essential SIP headers
+    // 便捷方法：常用 SIP 头字段
     std::string GetCallId() const { return GetHeader("Call-ID"); }
     void SetCallId(const std::string& call_id) { SetHeader("Call-ID", call_id); }
 
@@ -103,40 +103,40 @@ public:
     std::string GetContact() const { return GetHeader("Contact"); }
     void SetContact(const std::string& contact) { SetHeader("Contact", contact); }
 
-    // Get Content-Length
+    // 获取 Content-Length
     size_t GetContentLength() const { return body_.length(); }
 
-    // Serialize to SIP message string
+    // 序列化为 SIP 消息字符串
     virtual std::string Serialize() const;
 
-    // Parse SIP message from string (static factory method)
+    // 从字符串解析 SIP 消息（静态工厂方法）
     static SipMessage* Parse(const std::string& raw_message);
 
-    // Helper: Convert method enum to string
+    // 辅助方法：方法枚举转字符串
     static std::string MethodToString(Method method);
     static Method StringToMethod(const std::string& method_str);
 
-    // Helper: Generate unique Call-ID
+    // 辅助方法：生成唯一 Call-ID
     static std::string GenerateCallId(const std::string& local_ip);
 
-    // Helper: Generate branch parameter
+    // 辅助方法：生成 branch 参数
     static std::string GenerateBranch();
 
-    // Helper: Generate tag
+    // 辅助方法：生成 tag
     static std::string GenerateTag();
 
 protected:
-    Type type_ = Type::REQUEST;          // Message type
-    Method method_ = Method::UNKNOWN;    // SIP method
-    std::string request_uri_;             // Request URI (request only)
-    uint16_t status_code_ = 0;           // Status code (response only)
-    std::string reason_phrase_;          // Reason phrase (response only)
-    std::map<std::string, std::string> headers_;  // SIP headers
-    std::string body_;                    // Message body
+    Type type_ = Type::REQUEST;          // 消息类型
+    Method method_ = Method::UNKNOWN;    // SIP 方法
+    std::string request_uri_;             // 请求 URI（仅请求）
+    uint16_t status_code_ = 0;           // 状态码（仅响应）
+    std::string reason_phrase_;          // 原因短语（仅响应）
+    std::map<std::string, std::string> headers_;  // SIP 头字段
+    std::string body_;                    // 消息体
 };
 
 // ============================================================================
-// SipRequest: SIP request message
+// SipRequest: SIP 请求消息
 // ============================================================================
 class SipRequest : public SipMessage {
 public:
@@ -147,7 +147,7 @@ public:
 };
 
 // ============================================================================
-// SipResponse: SIP response message
+// SipResponse: SIP 响应消息
 // ============================================================================
 class SipResponse : public SipMessage {
 public:
@@ -158,29 +158,29 @@ public:
 };
 
 // ============================================================================
-// SipAuth: SIP authentication info (for WWW-Authenticate and Authorization headers)
+// SipAuth: SIP 认证信息（用于 WWW-Authenticate 和 Authorization 头）
 // ============================================================================
 struct SipAuthInfo {
-    std::string scheme;      // Authentication scheme (usually "Digest")
-    std::string realm;       // Authentication realm
-    std::string nonce;       // Server nonce
-    std::string opaque;      // Opaque value (optional)
-    std::string algorithm;    // Algorithm (usually "MD5")
-    std::string qop;         // Quality of protection (optional, e.g. "auth")
-    std::string stale;       // Stale flag (optional)
+    std::string scheme;      // 认证方案（通常为 "Digest"）
+    std::string realm;       // 认证域
+    std::string nonce;       // 服务器随机数
+    std::string opaque;      // 不透明值（可选）
+    std::string algorithm;    // 算法（通常为 "MD5"）
+    std::string qop;         // 保护质量（可选，如 "auth"）
+    std::string stale;       // 过期标志（可选）
     
-    // Fields for Authorization header
-    std::string username;    // Username
+    // Authorization 头字段
+    std::string username;    // 用户名
     std::string uri;         // URI
-    std::string response;    // Response digest
-    std::string nc;          // Nonce count (optional)
-    std::string cnonce;      // Client nonce (optional)
+    std::string response;    // 响应摘要
+    std::string nc;          // 随机数计数（可选）
+    std::string cnonce;      // 客户端随机数（可选）
 };
 
-// Parse WWW-Authenticate header and extract authentication info
+// 解析 WWW-Authenticate 头并提取认证信息
 SipAuthInfo ParseWwwAuthenticate(const std::string& header_value);
 
-// Calculate SIP Digest authentication response
+// 计算 SIP Digest 认证响应
 std::string CalculateSipDigestResponse(
     const std::string& username,
     const std::string& password,
