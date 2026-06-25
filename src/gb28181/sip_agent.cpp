@@ -15,7 +15,7 @@ namespace gb28181 {
 SipTransport::SipTransport(asio::io_context& io_context, uint16_t local_port)
     : io_context_(io_context)
     , socket_(io_context_, asio::ip::udp::endpoint(asio::ip::udp::v4(), local_port)) {
-    std::cout << "[SIP] SipTransport 创建，本地端口: " << local_port << std::endl;
+    std::cout << "[SIP] SipTransport created, local port: " << local_port << std::endl;
 }
 
 SipTransport::~SipTransport() {
@@ -30,7 +30,7 @@ bool SipTransport::Start() {
     running_ = true;
     StartReceive();
     
-    std::cout << "[SIP] SipTransport 启动，监听端口: " 
+    std::cout << "[SIP] SipTransport started, listening on port: " 
               << socket_.local_endpoint().port() << std::endl;
     return true;
 }
@@ -47,13 +47,13 @@ void SipTransport::Stop() {
         socket_.close(ec);
     }
     
-    std::cout << "[SIP] SipTransport 停止" << std::endl;
+    std::cout << "[SIP] SipTransport stopped" << std::endl;
 }
 
 bool SipTransport::SendMessage(const asio::ip::udp::endpoint& remote_endpoint,
                                const std::string& message) {
     if (!running_ || !socket_.is_open()) {
-        std::cerr << "[SIP] 发送失败：传输层未启动" << std::endl;
+        std::cerr << "[SIP] Send failed: transport not started" << std::endl;
         return false;
     }
     
@@ -61,11 +61,11 @@ bool SipTransport::SendMessage(const asio::ip::udp::endpoint& remote_endpoint,
     size_t sent = socket_.send_to(asio::buffer(message), remote_endpoint, 0, ec);
     
     if (ec) {
-        std::cerr << "[SIP] 发送失败: " << ec.message() << std::endl;
+        std::cerr << "[SIP] Send failed: " << ec.message() << std::endl;
         return false;
     }
     
-    std::cout << "[SIP] 发送 " << sent << " 字节到 " 
+    std::cout << "[SIP] Sent " << sent << " bytes to " 
               << remote_endpoint.address().to_string() << ":" 
               << remote_endpoint.port() << std::endl;
     
@@ -84,7 +84,7 @@ bool SipTransport::SendMessage(const std::string& remote_ip, uint16_t remote_por
     );
     
     if (ec) {
-        std::cerr << "[SIP] 无效的远程 IP 地址: " << remote_ip << std::endl;
+        std::cerr << "[SIP] Invalid remote IP address: " << remote_ip << std::endl;
         return false;
     }
     
@@ -137,7 +137,7 @@ void SipTransport::HandleReceive(const asio::error_code& error, size_t bytes_tra
         // 成功接收到消息
         std::string message(receive_buffer_.data(), bytes_transferred);
         
-        std::cout << "[SIP] 收到 " << bytes_transferred << " 字节来自 "
+        std::cout << "[SIP] Received " << bytes_transferred << " bytes from "
                   << remote_endpoint_.address().to_string() << ":" 
                   << remote_endpoint_.port() << std::endl;
         
@@ -159,7 +159,7 @@ void SipTransport::HandleReceive(const asio::error_code& error, size_t bytes_tra
 // ============================================================================
 
 SipAgent::SipAgent() {
-    std::cout << "[SIP] SipAgent 创建" << std::endl;
+    std::cout << "[SIP] SipAgent created" << std::endl;
 }
 
 SipAgent::~SipAgent() {
@@ -175,15 +175,15 @@ bool SipAgent::Init(const Gb28181Config& config) {
     // 这里暂时使用 "127.0.0.1"，实际应该获取本机 IP
     local_ip_ = "127.0.0.1";  // TODO: 获取本机实际 IP 地址
     
-    std::cout << "[SIP] SipAgent 初始化，设备ID: " << config.device_id 
-              << ", 本地端口: " << local_port_ << std::endl;
+    std::cout << "[SIP] SipAgent initialized, device ID: " << config.device_id 
+              << ", local port: " << local_port_ << std::endl;
     
     return true;
 }
 
 bool SipAgent::Start() {
     if (running_) {
-        std::cout << "[SIP] SipAgent 已经在运行" << std::endl;
+        std::cout << "[SIP] SipAgent is already running" << std::endl;
         return true;
     }
     
@@ -200,7 +200,7 @@ bool SipAgent::Start() {
     
     // 启动传输层
     if (!transport_->Start()) {
-        std::cerr << "[SIP] 传输层启动失败" << std::endl;
+        std::cerr << "[SIP] Transport layer start failed" << std::endl;
         return false;
     }
     
@@ -209,7 +209,7 @@ bool SipAgent::Start() {
         try {
             io_context_.run();
         } catch (const std::exception& e) {
-            std::cerr << "[SIP] IO 线程错误: " << e.what() << std::endl;
+            std::cerr << "[SIP] IO thread error: " << e.what() << std::endl;
         }
     });
     
@@ -217,11 +217,11 @@ bool SipAgent::Start() {
     
     // 发送注册请求
     if (!SendRegister()) {
-        std::cerr << "[SIP] 注册请求发送失败" << std::endl;
+        std::cerr << "[SIP] Register request send failed" << std::endl;
         // 不返回 false，允许继续运行（可能稍后重试）
     }
     
-    std::cout << "[SIP] SipAgent 启动成功" << std::endl;
+    std::cout << "[SIP] SipAgent started successfully" << std::endl;
     return true;
 }
 
@@ -277,12 +277,12 @@ void SipAgent::Stop() {
         io_thread_.join();
     }
     
-    std::cout << "[SIP] SipAgent 停止" << std::endl;
+    std::cout << "[SIP] SipAgent stopped" << std::endl;
 }
 
 bool SipAgent::SendMessage(const std::string& to, const std::string& xml_body) {
     if (!running_ || !transport_) {
-        std::cerr << "[SIP] 发送失败：SipAgent 未启动" << std::endl;
+        std::cerr << "[SIP] Send failed: SipAgent not started" << std::endl;
         return false;
     }
     
